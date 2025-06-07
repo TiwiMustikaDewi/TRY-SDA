@@ -126,7 +126,7 @@ def open_third_page(parent=None):
 
     back_button = tk.Button(root, text="BACK", font=("Helvetica", 14, "bold"),
                             bg="#4A2C2A", fg="white", activebackground="#661F1A",
-                            command=lambda: [root.destroy(), __import__("page_second").open_second_page()],
+                            command=lambda: [root.destroy(), __import__("page_second").open_second_page(parent)],
                             cursor="hand2", borderwidth=0)
     canvas.create_window(screen_width // 2, 600, window=back_button)
 

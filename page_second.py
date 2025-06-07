@@ -4,8 +4,12 @@ import os
 from page_anggota import open_anggota_page
 from page_project import open_third_page
 
-def open_second_page(back_callback=None):
-    second_window = tk.Tk()
+def open_second_page(parent=None, back_callback=None):
+    if parent is None:
+        parent = tk.Tk()
+        parent.withdraw()
+
+    second_window = tk.Toplevel(parent)
     second_window.title("About - Weak Hero Class")
     screen_width = 360
     screen_height = 640
@@ -26,11 +30,11 @@ def open_second_page(back_callback=None):
 
     def open_anggota():
         second_window.destroy()
-        open_anggota_page()
+        open_anggota_page(parent=parent)
 
     def open_project():
         second_window.destroy()
-        open_third_page()
+        open_third_page(parent=parent)
 
     def back_to_first_page():
         second_window.destroy()
@@ -39,14 +43,11 @@ def open_second_page(back_callback=None):
         else:
             import main
             main.main()
-   
-   
-   
+
     back_button = tk.Button(second_window, text="> back", font=("Helvetica", 12),
                             bg="#4A2C2A", fg="white", command=back_to_first_page,
                             cursor="hand2", borderwidth=0)
     canvas.create_window(60, 30, window=back_button)
-  
 
     anggota_button = tk.Button(second_window, text="ANGGOTA", font=("Helvetica", 18, "bold"),
                                bg="#4A2C2A", fg="white", activebackground="#661F1A",
@@ -59,5 +60,3 @@ def open_second_page(back_callback=None):
                                command=open_project, cursor="hand2", borderwidth=0)
     project_button.config(width=14, height=1)
     canvas.create_window(screen_width // 2, 450, window=project_button)
-
-    second_window.mainloop()
