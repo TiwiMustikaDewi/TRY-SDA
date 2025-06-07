@@ -4,7 +4,7 @@ import os
 from page_anggota import open_anggota_page
 from page_project import open_third_page
 
-def open_second_page(from_back=False):
+def open_second_page(back_callback=None):
     second_window = tk.Tk()
     second_window.title("About - Weak Hero Class")
     screen_width = 360
@@ -31,6 +31,22 @@ def open_second_page(from_back=False):
     def open_project():
         second_window.destroy()
         open_third_page()
+
+    def back_to_first_page():
+        second_window.destroy()
+        if callable(back_callback):
+            back_callback()
+        else:
+            import main
+            main.main()
+   
+   
+   
+    back_button = tk.Button(second_window, text="> back", font=("Helvetica", 12),
+                            bg="#4A2C2A", fg="white", command=back_to_first_page,
+                            cursor="hand2", borderwidth=0)
+    canvas.create_window(60, 30, window=back_button)
+  
 
     anggota_button = tk.Button(second_window, text="ANGGOTA", font=("Helvetica", 18, "bold"),
                                bg="#4A2C2A", fg="white", activebackground="#661F1A",
