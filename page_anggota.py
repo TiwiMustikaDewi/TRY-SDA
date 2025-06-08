@@ -1,5 +1,6 @@
 import tkinter as tk
 from PIL import Image, ImageTk
+import tkinter.messagebox as messagebox
 import os
 
 def open_anggota_page(parent=None):
@@ -27,8 +28,8 @@ def open_anggota_page(parent=None):
     canvas.create_image(0, 0, anchor="nw", image=bg_photo)
     anggota_window.bg_photo = bg_photo  # JANGAN HAPUS: simpan referensi!
 
-    # ====== FUNGSI TIAP ANGGOTA ======
-    def open_detail_page(name, image_filename):
+    # ====== FUNGSI DETAIL ANGGOTA DENGAN NAMA & NPM ======
+    def open_detail_page(name, image_filename, npm):
         anggota_window.destroy()
         detail_window = tk.Toplevel(parent)
         detail_window.title(f"{name} - Weak Hero Class")
@@ -37,7 +38,7 @@ def open_anggota_page(parent=None):
 
         detail_image_path = os.path.join(current_dir, "assets", image_filename)
         if not os.path.exists(detail_image_path):
-            print(f"⚠️ Gambar tidak ditemukan: {detail_image_path}")
+            print(f"⚠ Gambar tidak ditemukan: {detail_image_path}")
             return
 
         detail_image = Image.open(detail_image_path)
@@ -58,21 +59,32 @@ def open_anggota_page(parent=None):
                              cursor="hand2", borderwidth=0)
         canvas_detail.create_window(60, 30, window=back_btn)
 
+        # ====== TAMPILKAN NAMA & NPM ======
+        name_label = tk.Label(detail_window, text=f"Nama: {name}", font=("Helvetica", 12, "bold"),
+                              bg="#4A2C2A", fg="white", cursor="hand2")
+        
+        name_label.bind("<Button-1>", lambda e: messagebox.showinfo("Kata Hari Ini", "Tetap semangat dan jangan menyerah!"))
+        canvas_detail.create_window(screen_width // 2, 500, window=name_label)
+
+        npm_label = tk.Label(detail_window, text=f"NPM: {npm}", font=("Helvetica", 11),
+                             bg="#4A2C2A", fg="white")
+        canvas_detail.create_window(screen_width // 2, 530, window=npm_label)
+
     # ====== TOMBOL UNTUK 4 ANGGOTA ======
     tk.Button(anggota_window, text="Kenal Tiwi", font=("Helvetica", 12, "bold"),
-              bg="#4A2C2A", fg="white", command=lambda: open_detail_page("Tiwi", "tiwi.jpg"),
+              bg="#4A2C2A", fg="white", command=lambda: open_detail_page("TIWI MUSTIKA DEWI", "tiwi.jpg", "2217051034"),
               cursor="hand2", borderwidth=0).place(x=100, y=200, width=160, height=35)
 
     tk.Button(anggota_window, text="Kenal Satriyo", font=("Helvetica", 12, "bold"),
-              bg="#4A2C2A", fg="white", command=lambda: open_detail_page("Satriyo", "satriyo.jpg"),
+              bg="#4A2C2A", fg="white", command=lambda: open_detail_page("SATRIYO WICAKSONO", "satriyo.jpg", "2217051000"),
               cursor="hand2", borderwidth=0).place(x=100, y=260, width=160, height=35)
 
     tk.Button(anggota_window, text="Kenal Tisya", font=("Helvetica", 12, "bold"),
-              bg="#4A2C2A", fg="white", command=lambda: open_detail_page("Tisya", "tisya.jpg"),
+              bg="#4A2C2A", fg="white", command=lambda: open_detail_page("ELISA TISYA NUGRAHA", "tisya.jpg", "2217051018"),
               cursor="hand2", borderwidth=0).place(x=100, y=320, width=160, height=35)
 
     tk.Button(anggota_window, text="Kenal Alyssa", font=("Helvetica", 12, "bold"),
-              bg="#4A2C2A", fg="white", command=lambda: open_detail_page("Alyssa", "alyssa.jpg"),
+              bg="#4A2C2A", fg="white", command=lambda: open_detail_page("ALYSSA PYTRI HERMAWAN", "alyssa.jpg", "2217051051"),
               cursor="hand2", borderwidth=0).place(x=100, y=380, width=160, height=35)
 
     # ====== TOMBOL BACK KE PAGE SEBELUMNYA ======
