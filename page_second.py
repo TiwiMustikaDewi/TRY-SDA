@@ -38,12 +38,10 @@ def open_second_page(parent=None, back_callback=None):
 
     def back_to_first_page():
         second_window.destroy()
-        if callable(back_callback):
-            back_callback()
-        else:
-            import main
-            main.main()
+        if parent is not None:
+            parent.deiconify()
 
+            
     back_button = tk.Button(second_window, text="> back", font=("Helvetica", 12),
                             bg="#4A2C2A", fg="white", command=back_to_first_page,
                             cursor="hand2", borderwidth=0)

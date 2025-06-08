@@ -24,7 +24,7 @@ def main():
 
     start_button = tk.Button(welcome_window, text="START", font=("Helvetica", 18, "bold"),
                              bg="#4A2C2A", fg="white", activebackground="#661F1A",
-                             command=lambda: [welcome_window.destroy(), open_second_page()],
+                             command=lambda: [welcome_window.withdraw(), open_second_page(parent=welcome_window)],
                              cursor="hand2", borderwidth=0)
 
     canvas1.create_window(screen_width // 2, 540, window=start_button)
