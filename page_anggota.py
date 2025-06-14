@@ -10,7 +10,7 @@ def open_anggota_page(parent=None):
         parent = tk.Tk()
 
     anggota_window = tk.Toplevel(parent)
-    anggota_window.title("Anggota - Weak Hero Class")
+    anggota_window.title("Perkenalan Anggota")
     screen_width = 360
     screen_height = 640
     anggota_window.geometry(f"{screen_width}x{screen_height}")
@@ -28,11 +28,11 @@ def open_anggota_page(parent=None):
     canvas.create_image(0, 0, anchor="nw", image=bg_photo)
     anggota_window.bg_photo = bg_photo  # JANGAN HAPUS: simpan referensi!
 
-    # ====== FUNGSI DETAIL ANGGOTA DENGAN NAMA & NPM ======
-    def open_detail_page(name, image_filename, npm):
+    # ====== FUNGSI DETAIL ANGGOT ======
+    def open_detail_page(name, image_filename):
         anggota_window.destroy()
         detail_window = tk.Toplevel(parent)
-        detail_window.title(f"{name} - Weak Hero Class")
+        detail_window.title(f"{name} - Kelompok 7")
         detail_window.geometry(f"{screen_width}x{screen_height}")
         detail_window.resizable(False, False)
 
@@ -54,45 +54,45 @@ def open_anggota_page(parent=None):
             detail_window.destroy()
             open_anggota_page(parent=parent)
 
-        back_btn = tk.Button(detail_window, text="← KEMBALI", font=("Helvetica", 12),
-                             bg="#4A2C2A", fg="white", command=go_back_to_anggota,
+        back_btn = tk.Button(detail_window, text="> back ", font=("Inter", 9, "bold"),
+                             bg="#35216B", fg="white", command=go_back_to_anggota,
                              cursor="hand2", borderwidth=0)
-        canvas_detail.create_window(60, 30, window=back_btn)
+        canvas_detail.create_window(35, 25, window=back_btn)
 
-        # ====== TAMPILKAN NAMA & NPM ======
-        name_label = tk.Label(detail_window, text=f"Nama: {name}", font=("Helvetica", 12, "bold"),
+        # WHAT THEY SAY?
+        name_label = tk.Label(detail_window, text=f"{name}", font=("Inter", 12, "bold"),
                               bg="#4A2C2A", fg="white", cursor="hand2")
-        
-        name_label.bind("<Button-1>", lambda e: messagebox.showinfo("Kata Hari Ini", "Tetap semangat dan jangan menyerah!"))
+
+        name_label.bind("<Button-1>", lambda e: messagebox.showinfo("What They Say?", "We have our best! Hope We get best result too!"))
         canvas_detail.create_window(screen_width // 2, 500, window=name_label)
 
-        npm_label = tk.Label(detail_window, text=f"NPM: {npm}", font=("Helvetica", 11),
-                             bg="#4A2C2A", fg="white")
-        canvas_detail.create_window(screen_width // 2, 530, window=npm_label)
-
     # ====== TOMBOL UNTUK 4 ANGGOTA ======
-    tk.Button(anggota_window, text="Kenal Tiwi", font=("Helvetica", 12, "bold"),
-              bg="#4A2C2A", fg="white", command=lambda: open_detail_page("TIWI MUSTIKA DEWI", "tiwi.jpg", "2217051034"),
-              cursor="hand2", borderwidth=0).place(x=100, y=200, width=160, height=35)
+    alyssa_button = tk.Button(anggota_window, text=">", font=("Inter", 5, "bold"),
+                            bg="#598995", fg="white",
+                            command=lambda: open_detail_page("What They Say?", "ALYSSA.jpg"), cursor="hand2", borderwidth=0)
+    canvas.create_window(118, 316, window=alyssa_button)
 
-    tk.Button(anggota_window, text="Kenal Satriyo", font=("Helvetica", 12, "bold"),
-              bg="#4A2C2A", fg="white", command=lambda: open_detail_page("SATRIYO WICAKSONO", "satriyo.jpg", "2217051000"),
-              cursor="hand2", borderwidth=0).place(x=100, y=260, width=160, height=35)
+    tisya_button = tk.Button(anggota_window, text=">", font=("Inter", 5, "bold"),
+                          bg="#598995", fg="white",
+                          command=lambda: open_detail_page("What They Say?", "TISYA.jpg"), cursor="hand2", borderwidth=0)
+    canvas.create_window(287, 317, window=tisya_button)
 
-    tk.Button(anggota_window, text="Kenal Tisya", font=("Helvetica", 12, "bold"),
-              bg="#4A2C2A", fg="white", command=lambda: open_detail_page("ELISA TISYA NUGRAHA", "tisya.jpg", "2217051018"),
-              cursor="hand2", borderwidth=0).place(x=100, y=320, width=160, height=35)
+    satriyo_button = tk.Button(anggota_window, text=">", font=("Inter", 5, "bold"),
+                          bg="#598995", fg="white",
+                          command=lambda: open_detail_page("What They Say?", "SATRIYO.jpg"), cursor="hand2", borderwidth=0)
+    canvas.create_window(118, 510, window=satriyo_button)
 
-    tk.Button(anggota_window, text="Kenal Alyssa", font=("Helvetica", 12, "bold"),
-              bg="#4A2C2A", fg="white", command=lambda: open_detail_page("ALYSSA PYTRI HERMAWAN", "alyssa.jpg", "2217051051"),
-              cursor="hand2", borderwidth=0).place(x=100, y=380, width=160, height=35)
+    tiwi_button = tk.Button(anggota_window, text=">", font=("Inter", 5, "bold"),
+                          bg="#598995", fg="white",
+                          command=lambda: open_detail_page("What They Say?", "TIWI.jpg"), cursor="hand2", borderwidth=0)
+    canvas.create_window(287, 510, window=tiwi_button)
 
     # ====== TOMBOL BACK KE PAGE SEBELUMNYA ======
     def go_back():
         anggota_window.destroy()
         open_second_page(parent=parent)
 
-    back_button = tk.Button(anggota_window, text="BACK", font=("Helvetica", 14, "bold"),
-                            bg="#4A2C2A", fg="white", activebackground="#661F1A",
+    back_button = tk.Button(anggota_window, text="> back", font=("Inter", 9, "bold"),
+                            bg="#35216B", fg="white", activebackground="#8176E0",
                             command=go_back, cursor="hand2", borderwidth=0)
-    canvas.create_window(screen_width // 2, 580, window=back_button)
+    canvas.create_window(35, 25, window=back_button)
