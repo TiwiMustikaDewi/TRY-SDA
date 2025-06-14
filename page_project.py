@@ -1,133 +1,215 @@
 import tkinter as tk
+from tkinter import messagebox
 from PIL import Image, ImageTk
-import os
 import csv
+import os
+import time
 
-SCORE_FILE = "scores.csv"
+class KataScoringApp(tk.Frame):
+    def __init__(self, master, parent=None):
+        super().__init__(master)
+        self.master = master
+        self.parent = parent
 
-def read_scores():
-    scores = []
-    if os.path.exists(SCORE_FILE):
-        with open(SCORE_FILE, newline='') as file:
-            reader = csv.DictReader(file)
-            for row in reader:
-                scores.append({"Nama": row["Nama"], "Skor": int(row["Skor"])})
-    return scores
+        self.ao_score = 0
+        self.aka_score = 0
+        self.ao_time = 0
+        self.aka_time = 0
+        self.ao_running = False
+        self.aka_running = False
+        self.ao_start_time = None
+        self.aka_start_time = None
+        self.stopwatch_visible = True
+        self.ao_started = False
+        self.aka_started = False
 
-def write_scores(scores):
-    with open(SCORE_FILE, mode='w', newline='') as file:
-        writer = csv.DictWriter(file, fieldnames=["Nama", "Skor"])
-        writer.writeheader()
-        writer.writerows(scores)
+        self.setup_ui()
+        self.update_timers()
+
+    def setup_ui(self):
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        bg_path = os.path.join(current_dir, "assets", "gradasi.jpg")
+        bg_image = Image.open(bg_path).resize((360, 640))
+        self.bg_photo = ImageTk.PhotoImage(bg_image)
+
+        # Buat canvas dulu!
+        self.canvas = tk.Canvas(self, width=360, height=640)
+        self.canvas.pack(fill="both", expand=True)
+
+        # Baru gambar background ke canvas
+        self.canvas.create_image(0, 0, anchor="nw", image=self.bg_photo)
+
+        # Rectangle background AO (biru) dan AKA (merah)
+        self.canvas.create_rectangle(10, 150, 175, 450, fill="blue", outline="")
+        self.canvas.create_rectangle(185, 150, 350, 450, fill="red", outline="")
+
+        # Division & Judges
+        self.canvas.create_text(20, 120, text="Division:", fill="white", font=("Inter", 10, "bold"), anchor="w")
+        self.canvas.create_text(250, 120, text="Judges:", fill="white", font=("Inter", 10, "bold"), anchor="w")
+        self.division_entry = self._create_entry(145, 120, 22)
+        self.judges_entry = self._create_entry(318, 120, 5)
+
+        # AO & AKA label dan entry
+        self.canvas.create_text(30, 180, text="Ao:", fill="white", font=("Inter", 10, "bold"), anchor="w")
+        self.ao_name = self._create_entry(100, 180, 15)
+        self.canvas.create_text(210, 180, text="Aka:", fill="white", font=("Inter", 10, "bold"), anchor="w")
+        self.aka_name = self._create_entry(287, 180, 15)
+
+        # Score label di atas rectangle
+        self.ao_score_label = self._create_label("0",125, 233, size=36, color="white", bg="blue")
+        self.aka_score_label = self._create_label("0", 300, 233, size=36, color="white", bg="red")
+
+        self.ao_timer_label = tk.Label(self.master, text="0:00", font=("Inter", 12, "bold"), fg="white", bg="navy")
+        self.ao_timer_label_id = self.canvas.create_window(90, 335, window=self.ao_timer_label)
+        self.aka_timer_label = tk.Label(self.master, text="0:00", font=("Inter", 12, "bold"), fg="white", bg="darkred")
+        self.aka_timer_label_id = self.canvas.create_window(265, 335, window=self.aka_timer_label)
+
+        self._create_button("-1", lambda: self.change_score("ao", -1), 60, 295)
+        self._create_button("+1", lambda: self.change_score("ao", 1), 120, 295)
+        self._create_button("-1", lambda: self.change_score("aka", -1), 232, 295)
+        self._create_button("+1", lambda: self.change_score("aka", 1), 300, 295)
+
+        self._create_button("Shikkaku", lambda: self.disqualify("ao"), 55, 375, width=7, bg="midnightblue", fg="white")
+        self._create_button("Kiken", lambda: self.retire("ao"), 130, 375, width=7, bg="midnightblue", fg="white")
+        self._create_button("Shikkaku", lambda: self.disqualify("aka"), 228, 375, width=7, bg="darkred", fg="white")
+        self._create_button("Kiken", lambda: self.retire("aka"), 300, 375, width=7, bg="darkred", fg="white")
+
+        self.ao_start_btn = self._create_button("START", self.start_ao_timer, 90, 420, bg="limegreen")
+        self.aka_start_btn = self._create_button("START", self.start_aka_timer, 270, 420, bg="limegreen")
+
+        self.toggle_btn = self._create_button("SHOW/HIDE STOPWATCH", self.toggle_stopwatch, 180, 490, width=20, bg="limegreen")
+
+        self.done_btn = self._create_button("DONE", self.save_scores, 100, 520, bg="limegreen")
+        self.reset_btn = self._create_button("RESET", self.reset_all, 250, 520, bg="limegreen")
+
+        self.back_btn = self._create_button("BACK", self.go_back, 180, 540, bg="navy", fg="white")
+
+        # Gambar BIRU dan MERAH
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        biru_img_path = os.path.join(current_dir, "assets", "BLUE.png")
+        merah_img_path = os.path.join(current_dir, "assets", "RED.png")
+
+        self.biru_photo = ImageTk.PhotoImage(Image.open(biru_img_path))
+        self.merah_photo = ImageTk.PhotoImage(Image.open(merah_img_path))
+
+        # Tempatkan gambar di canvas (atur posisi sesuai kebutuhan)
+        self.canvas.create_image(65, 233, image=self.biru_photo, anchor="center")
+        self.canvas.create_image(240, 233, image=self.merah_photo, anchor="center")
+
+    def _create_entry(self, x, y, width):
+        entry = tk.Entry(self.master, width=width)
+        self.canvas.create_window(x, y, window=entry)
+        return entry
+
+    def _create_label(self, text, x, y, size=12, color="black", bg=None):
+        label = tk.Label(self.master, text=text, font=("Inter", size, "bold"), fg=color, bg=bg)
+        self.canvas.create_window(x, y, window=label)
+        return label
+
+    def _create_button(self, text, command, x, y, width=5, bg="white", fg="black"):
+        button = tk.Button(self.master, text=text, command=command, width=width, bg=bg, fg=fg, cursor="hand2")
+        self.canvas.create_window(x, y, window=button)
+        return button
+
+    def change_score(self, side, amount):
+        if side == "ao":
+            self.ao_score += amount
+            self.ao_score_label.config(text=str(self.ao_score))
+        else:
+            self.aka_score += amount
+            self.aka_score_label.config(text=str(self.aka_score))
+
+    def disqualify(self, side):
+        messagebox.showinfo("Diskualifikasi", f"Pemain {side.upper()} terdiskualifikasi")
+
+    def retire(self, side):
+        messagebox.showinfo("Kiken", f"Pemain {side.upper()} telah mengundurkan diri")
+
+    def start_ao_timer(self):
+        self.ao_started = True
+        self.aka_running = False
+        self.ao_running = True
+        self.ao_start_time = time.time() - self.ao_time
+
+    def start_aka_timer(self):
+        self.aka_started = True
+        self.ao_running = False
+        self.aka_running = True
+        self.aka_start_time = time.time() - self.aka_time
+
+    def update_timers(self):
+        if self.ao_running:
+            self.ao_time = time.time() - self.ao_start_time
+            mins, secs = divmod(int(self.ao_time), 60)
+            self.ao_timer_label.config(text=f"{mins}:{secs:02}")
+        if self.aka_running:
+            self.aka_time = time.time() - self.aka_start_time
+            mins, secs = divmod(int(self.aka_time), 60)
+            self.aka_timer_label.config(text=f"{mins}:{secs:02}")
+
+        self.master.after(1000, self.update_timers)
+
+    def toggle_stopwatch(self):
+        self.stopwatch_visible = not self.stopwatch_visible
+        state = "normal" if self.stopwatch_visible else "hidden"
+        self.canvas.itemconfigure(self.ao_timer_label_id, state=state)
+        self.canvas.itemconfigure(self.aka_timer_label_id, state=state)
+
+
+    def save_scores(self):
+        # Hentikan stopwatch AO & AKA
+        self.ao_running = False
+        self.aka_running = False
+
+        division = self.division_entry.get()
+        file_path = os.path.join(os.path.dirname(__file__), "scores.csv")
+        file_exists = os.path.isfile(file_path)
+
+        rows = []
+        if self.ao_started and not self.aka_started:
+            # Hanya AO yang jalan
+            rows.append([division, "AO", self.ao_score, int(self.ao_time)])
+        elif self.aka_started and not self.ao_started:
+            # Hanya AKA yang jalan
+            rows.append([division, "AKA", self.aka_score, int(self.aka_time)])
+        elif self.ao_started and self.aka_started:
+            # Keduanya jalan, simpan dua baris
+            rows.append([division, "AO", self.ao_score, int(self.ao_time)])
+            rows.append([division, "AKA", self.aka_score, int(self.aka_time)])
+        else:
+            messagebox.showwarning("Peringatan", "Belum ada pertandingan yang dimulai.")
+            return
+
+        with open(file_path, "a", newline="", encoding="utf-8") as f:
+            writer = csv.writer(f)
+            if not file_exists:
+                writer.writerow(["Division", "Side", "Score", "Time"])
+            for row in rows:
+                writer.writerow(row)
+        messagebox.showinfo("Simpan", "Data telah disimpan.")
+
+    def reset_all(self):
+        self.ao_score = 0
+        self.aka_score = 0
+        self.ao_time = 0
+        self.aka_time = 0
+        self.ao_running = False
+        self.aka_running = False
+        self.ao_score_label.config(text="0")
+        self.aka_score_label.config(text="0")
+        self.ao_timer_label.config(text="0:00")
+        self.aka_timer_label.config(text="0:00")
+
+    def go_back(self):
+        self.master.destroy()
+        from page_second import open_second_page
+        open_second_page(parent=self.parent)
 
 def open_third_page(parent=None):
-    # Gunakan parent jika dikirim, jika tidak, buat root tersembunyi
-    if parent is None:
-        parent = tk.Tk()
-        parent.withdraw()  # Sembunyikan jendela utama jika tidak diberikan
-
-    root = tk.Toplevel(parent)
-    root.title("Project - Kelompok 7")
-    screen_width = 360
-    screen_height = 640
-    root.geometry(f"{screen_width}x{screen_height}")
-    root.resizable(False, False)
-
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    image_path = os.path.join(current_dir, "assets", "WHC2.jpg")
-
-    bg_image = Image.open(image_path)
-    bg_image = bg_image.resize((screen_width, screen_height), Image.Resampling.LANCZOS)
-    bg_photo = ImageTk.PhotoImage(bg_image)
-
-    canvas = tk.Canvas(root, width=screen_width, height=screen_height)
-    canvas.pack(fill="both", expand=True)
-    canvas.create_image(0, 0, anchor="nw", image=bg_photo)
-    canvas.image = bg_photo
-
-    scores = []
-    score_widgets = []
-
-    def setup_players():
-        try:
-            num = int(player_count_entry.get())
-        except ValueError:
-            return
-        new_scores = [{"Nama": f"Pemain {i+1}", "Skor": 0} for i in range(num)]
-        write_scores(new_scores)
-        update_display()
-
-    def update_display():
-        nonlocal scores
-        scores = read_scores()
-        for w in score_widgets:
-            for sub in w.values():
-                sub.destroy()
-        score_widgets.clear()
-
-        y = 150
-        for player in scores:
-            name_label = tk.Label(root, text=player["Nama"], font=("Helvetica", 10), bg="white")
-            score_label = tk.Label(root, text=str(player["Skor"]), font=("Helvetica", 10, "bold"), bg="white")
-            score_entry = tk.Entry(root, width=5)
-            score_entry.insert(0, "0")
-            add_button = tk.Button(root, text="+", command=lambda p=player, e=score_entry: add_score(p, e))
-
-            canvas.create_window(70, y, window=name_label)
-            canvas.create_window(160, y, window=score_label)
-            canvas.create_window(220, y, window=score_entry)
-            canvas.create_window(280, y, window=add_button)
-
-            score_widgets.append({
-                "name": name_label,
-                "score": score_label,
-                "entry": score_entry,
-                "button": add_button
-            })
-            y += 40
-
-    def add_score(player, entry_widget):
-        try:
-            added_score = int(entry_widget.get())
-        except ValueError:
-            return
-        for s in scores:
-            if s["Nama"] == player["Nama"]:
-                s["Skor"] += added_score
-        write_scores(scores)
-        update_display()
-
-    def reset_scores():
-        for s in scores:
-            s["Skor"] = 0
-        write_scores(scores)
-        update_display()
-
-    def update_scores():
-        write_scores(scores)
-        update_display()
-
-    # Input jumlah pemain
-    player_count_entry = tk.Entry(root, font=("Helvetica", 12))
-    player_count_entry.insert(0, "Jumlah Pemain")
-    canvas.create_window(screen_width // 2, 80, window=player_count_entry)
-
-    submit_count_button = tk.Button(root, text="Set Jumlah Pemain", font=("Helvetica", 10, "bold"),
-                                    bg="#4A2C2A", fg="white", command=setup_players, cursor="hand2")
-    canvas.create_window(screen_width // 2, 120, window=submit_count_button)
-
-    reset_button = tk.Button(root, text="Reset Semua Skor", font=("Helvetica", 10, "bold"),
-                             bg="#661F1A", fg="white", command=reset_scores, cursor="hand2")
-    canvas.create_window(screen_width // 2, 520, window=reset_button)
-
-    save_button = tk.Button(root, text="Simpan Skor", font=("Helvetica", 10, "bold"),
-                            bg="#4A2C2A", fg="white", command=update_scores, cursor="hand2")
-    canvas.create_window(screen_width // 2, 560, window=save_button)
-
-    back_button = tk.Button(root, text="BACK", font=("Helvetica", 14, "bold"),
-                            bg="#4A2C2A", fg="white", activebackground="#661F1A",
-                            command=lambda: [root.destroy(), __import__("page_second").open_second_page(parent)],
-                            cursor="hand2", borderwidth=0)
-    canvas.create_window(screen_width // 2, 600, window=back_button)
-
-    update_display()
+    window = tk.Toplevel(parent) if parent else tk.Tk()
+    window.title("Project - Kata Scoring")
+    app = KataScoringApp(window, parent=parent)
+    app.pack(fill="both", expand=True)
+    window.geometry("360x640")
+    window.resizable(False, False)
+    # Jika ada gambar di window, simpan referensinya:
